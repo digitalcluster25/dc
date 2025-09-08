@@ -1,0 +1,6 @@
+---
+description:
+globs:
+alwaysApply: true
+---
+Проект работает на чистом HTML / CSS / Tailwind CSS ( используй только CDN), не используй фреймворки React / Angular / Vue.
