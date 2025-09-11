@@ -24,8 +24,8 @@ export default function Home() {
   return (
     <div className='min-h-screen bg-background'>
       {/* Hero Section */}
-      <section className='relative py-20 px-4 bg-gradient-to-br from-primary/5 via-background to-secondary/5'>
-        <div className='container mx-auto max-w-6xl'>
+      <section className='relative py-20 bg-gradient-to-br from-primary/5 via-background to-secondary/5'>
+        <div className='container mx-auto px-6 max-w-7xl'>
           <div className='text-center space-y-8'>
             <Badge variant='outline' className='text-sm'>
               Сообщество на базе ИИ
@@ -57,8 +57,8 @@ export default function Home() {
       </section>
 
       {/* Features Section */}
-      <section className='py-20 px-4'>
-        <div className='container mx-auto max-w-6xl'>
+      <section className='py-20'>
+        <div className='container mx-auto px-6 max-w-7xl'>
           <div className='text-center space-y-4 mb-16'>
             <h2 className='text-4xl font-bold'>
               Откройте для себя Digital Cluster 25
@@ -115,8 +115,8 @@ export default function Home() {
       </section>
 
       {/* AI Benefits Section */}
-      <section className='py-20 px-4 bg-muted/30'>
-        <div className='container mx-auto max-w-6xl'>
+      <section className='py-20 bg-muted/30'>
+        <div className='container mx-auto px-6 max-w-7xl'>
           <div className='grid lg:grid-cols-2 gap-16 items-center'>
             <div className='space-y-8'>
               <div>
@@ -207,8 +207,8 @@ export default function Home() {
       </section>
 
       {/* Benefits Grid */}
-      <section className='py-20 px-4'>
-        <div className='container mx-auto max-w-6xl'>
+      <section className='py-20'>
+        <div className='container mx-auto px-6 max-w-7xl'>
           <div className='text-center space-y-4 mb-16'>
             <h2 className='text-4xl font-bold'>
               Почему выбрать Digital Cluster 25?
@@ -267,8 +267,8 @@ export default function Home() {
       </section>
 
       {/* CTA Section */}
-      <section className='py-20 px-4 bg-primary text-primary-foreground'>
-        <div className='container mx-auto max-w-4xl text-center'>
+      <section className='py-20 bg-primary text-primary-foreground'>
+        <div className='container mx-auto px-6 max-w-7xl text-center'>
           <h2 className='text-4xl font-bold mb-6'>
             Готовы присоединиться к революции?
           </h2>
@@ -293,28 +293,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className='py-12 px-4 border-t'>
-        <div className='container mx-auto max-w-6xl'>
-          <div className='text-center space-y-4'>
-            <div className='flex items-center justify-center space-x-2'>
-              <div className='h-8 w-8 rounded bg-primary flex items-center justify-center'>
-                <span className='text-primary-foreground font-bold text-sm'>
-                  DC
-                </span>
-              </div>
-              <span className='text-xl font-bold'>Digital Cluster 25</span>
-            </div>
-            <p className='text-muted-foreground'>
-              Переосмысливаем предпринимательский нетворкинг в цифровую эпоху
-            </p>
-            <Separator className='max-w-md mx-auto' />
-            <p className='text-sm text-muted-foreground'>
-              © 2024 Digital Cluster 25. All rights reserved.
-            </p>
-          </div>
-        </div>
-      </footer>
     </div>
   );
 }

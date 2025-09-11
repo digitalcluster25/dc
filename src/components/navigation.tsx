@@ -4,14 +4,17 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 
-const navigation = [{ name: 'Главная', href: '/' }];
+const navigation = [
+  { name: 'Главная', href: '/' },
+  { name: 'Блог', href: '/blog' }
+];
 
 export function Navigation() {
   const pathname = usePathname();
 
   return (
     <nav className='border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60'>
-      <div className='container mx-auto px-4'>
+      <div className='container mx-auto px-6 max-w-7xl'>
         <div className='flex h-16 items-center justify-between'>
           <div className='flex items-center space-x-8'>
             <Link href='/' className='flex items-center space-x-2'>

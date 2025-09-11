@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
 import { Toaster } from 'sonner';
 import { Navigation } from '@/components/navigation';
+import { Footer } from '@/components/footer';
 import { ErrorBoundary } from '@/components/error-boundary';
 
 const geistSans = Geist({
@@ -82,13 +83,18 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang='en'>
+    <html lang='en' className="h-full">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased h-full flex flex-col`}
       >
         <ErrorBoundary>
-          <Navigation />
-          {children}
+          <div className="flex flex-col min-h-screen">
+            <Navigation />
+            <main className="flex-1">
+              {children}
+            </main>
+            <Footer />
+          </div>
           <Toaster />
         </ErrorBoundary>
       </body>
