@@ -83,16 +83,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang='en' className="h-full">
+    <html lang='en' className='h-full'>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased h-full flex flex-col`}
       >
         <ErrorBoundary>
-          <div className="flex flex-col min-h-screen">
+          <div className='flex flex-col min-h-screen'>
             <Navigation />
-            <main className="flex-1">
-              {children}
-            </main>
+            <main className='flex-1'>{children}</main>
             <Footer />
           </div>
           <Toaster />

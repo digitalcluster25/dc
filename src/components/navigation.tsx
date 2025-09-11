@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils';
 
 const navigation = [
   { name: 'Главная', href: '/' },
-  { name: 'Блог', href: '/blog' }
+  { name: 'Блог', href: '/blog' },
 ];
 
 export function Navigation() {
