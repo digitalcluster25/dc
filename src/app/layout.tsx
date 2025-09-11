@@ -17,8 +17,16 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: 'Digital Cluster 25 - AI-Powered Entrepreneurial Community',
-  description: 'Пионерское онлайн-сообщество на базе искусственного интеллекта для предпринимателей. Умное сопоставление, глобальные связи и персонализированный опыт.',
-  keywords: ['AI', 'предпринимательство', 'нетворкинг', 'сообщество', 'искусственный интеллект', 'Digital Cluster 25'],
+  description:
+    'Пионерское онлайн-сообщество на базе искусственного интеллекта для предпринимателей. Умное сопоставление, глобальные связи и персонализированный опыт.',
+  keywords: [
+    'AI',
+    'предпринимательство',
+    'нетворкинг',
+    'сообщество',
+    'искусственный интеллект',
+    'Digital Cluster 25',
+  ],
   authors: [{ name: 'Digital Cluster 25 Team' }],
   creator: 'Digital Cluster 25',
   publisher: 'Digital Cluster 25',
@@ -38,7 +46,8 @@ export const metadata: Metadata = {
     locale: 'ru_RU',
     url: 'https://digital-cluster-25.vercel.app',
     title: 'Digital Cluster 25 - AI-Powered Entrepreneurial Community',
-    description: 'Пионерское онлайн-сообщество на базе искусственного интеллекта для предпринимателей',
+    description:
+      'Пионерское онлайн-сообщество на базе искусственного интеллекта для предпринимателей',
     siteName: 'Digital Cluster 25',
     images: [
       {
@@ -52,7 +61,8 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     title: 'Digital Cluster 25 - AI-Powered Entrepreneurial Community',
-    description: 'Пионерское онлайн-сообщество на базе искусственного интеллекта для предпринимателей',
+    description:
+      'Пионерское онлайн-сообщество на базе искусственного интеллекта для предпринимателей',
     images: ['/og-image.jpg'],
   },
   viewport: {

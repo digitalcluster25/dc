@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import * as Sentry from '@sentry/nextjs';
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     // Пример ошибки для тестирования Sentry
     throw new Error('This is a test error for Sentry monitoring');
@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    
+
     // Логируем пользовательское действие
     Sentry.addBreadcrumb({
       message: 'User action performed',

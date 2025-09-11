@@ -3,7 +3,13 @@
 import React from 'react';
 import * as Sentry from '@sentry/nextjs';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { AlertTriangle, RefreshCw } from 'lucide-react';
 
 interface ErrorBoundaryState {
@@ -61,42 +67,55 @@ export class ErrorBoundary extends React.Component<
         );
       }
 
-      return <DefaultErrorFallback error={this.state.error!} resetError={this.resetError} />;
+      return (
+        <DefaultErrorFallback
+          error={this.state.error!}
+          resetError={this.resetError}
+        />
+      );
     }
 
     return this.props.children;
   }
 }
 
-function DefaultErrorFallback({ error, resetError }: { error: Error; resetError: () => void }) {
+function DefaultErrorFallback({
+  error,
+  resetError,
+}: {
+  error: Error;
+  resetError: () => void;
+}) {
   return (
-    <div className="min-h-screen flex items-center justify-center p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10">
-            <AlertTriangle className="h-6 w-6 text-destructive" />
+    <div className='min-h-screen flex items-center justify-center p-4'>
+      <Card className='w-full max-w-md'>
+        <CardHeader className='text-center'>
+          <div className='mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10'>
+            <AlertTriangle className='h-6 w-6 text-destructive' />
           </div>
-          <CardTitle className="text-xl">Что-то пошло не так</CardTitle>
+          <CardTitle className='text-xl'>Что-то пошло не так</CardTitle>
           <CardDescription>
             Произошла неожиданная ошибка. Мы уже работаем над её исправлением.
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className='space-y-4'>
           {process.env.NODE_ENV === 'development' && (
-            <div className="rounded-md bg-muted p-3">
-              <p className="text-sm font-medium text-muted-foreground">Ошибка:</p>
-              <p className="text-sm text-destructive">{error.message}</p>
+            <div className='rounded-md bg-muted p-3'>
+              <p className='text-sm font-medium text-muted-foreground'>
+                Ошибка:
+              </p>
+              <p className='text-sm text-destructive'>{error.message}</p>
             </div>
           )}
-          <div className="flex flex-col gap-2">
-            <Button onClick={resetError} className="w-full">
-              <RefreshCw className="mr-2 h-4 w-4" />
+          <div className='flex flex-col gap-2'>
+            <Button onClick={resetError} className='w-full'>
+              <RefreshCw className='mr-2 h-4 w-4' />
               Попробовать снова
             </Button>
             <Button
-              variant="outline"
+              variant='outline'
               onClick={() => window.location.reload()}
-              className="w-full"
+              className='w-full'
             >
               Обновить страницу
             </Button>

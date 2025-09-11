@@ -9,7 +9,7 @@ coverage:
         target: 70%
 
 comment:
-  layout: "header,diff,files,footer"
+  layout: 'header,diff,files,footer'
   behavior: default
   require_changes: false
   require_base: no
