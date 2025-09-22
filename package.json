@@ -1,0 +1,38 @@
+{
+  "name": "railway-saas-platform",
+  "version": "0.1.0",
+  "description": "SaaS хостинг-платформа на базе Railway",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start"
+  },
+  "dependencies": {
+    "next": "13.5.6",
+    "react": "18.2.0",
+    "react-dom": "18.2.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0",
+    "typescript": "^5.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/digitalcluster25/dc.git"
+  },
+  "keywords": [
+    "railway",
+    "saas",
+    "hosting",
+    "nextjs",
+    "typescript"
+  ],
+  "author": "Digital Cluster Team",
+  "license": "MIT"
+}

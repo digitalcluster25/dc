@@ -1,0 +1,13 @@
+version: '3.8'
+
+services:
+  railway-saas:
+    build: .
+    ports:
+      - "3050:3000"
+    volumes:
+      - .:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+    command: npm run dev
