@@ -9,7 +9,9 @@ import {
   CryptoRate, 
   PaymentAnalytics,
   ServiceType,
-  CryptoCurrency
+  CryptoCurrency,
+  BlockchainNetwork,
+  PaymentStatus
 } from '../types/crypto-billing.types';
 import { 
   formatCryptoAmount, 
@@ -306,14 +308,18 @@ function PaymentsTab({ timeRange }: { timeRange: string }) {
       userId: `user_${Math.random().toString(36).substring(2, 6)}`,
       serviceType: ['wordpress', 'nextjs', 'api', 'database'][Math.floor(Math.random() * 4)] as ServiceType,
       cryptoCurrency: ['USDT', 'USDC', 'BTC', 'ETH', 'MATIC'][Math.floor(Math.random() * 5)] as CryptoCurrency,
+      network: ['ethereum', 'polygon', 'bsc', 'bitcoin'][Math.floor(Math.random() * 4)] as BlockchainNetwork,
       cryptoAmount: (Math.random() * 100 + 10).toFixed(6),
       priceEUR: 10,
       priceUSD: 10.90,
       exchangeRate: 0.92,
-      status: ['pending', 'confirming', 'confirmed', 'completed', 'expired', 'failed'][Math.floor(Math.random() * 6)] as any,
-      createdAt: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000),
       paymentAddress: `0x${Math.random().toString(16).substring(2, 42)}`,
-      confirmations: Math.floor(Math.random() * 20)
+      qrCode: `data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA...`, // Mock QR
+      status: ['pending', 'confirming', 'confirmed', 'completed', 'expired', 'failed'][Math.floor(Math.random() * 6)] as PaymentStatus,
+      createdAt: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000),
+      expiresAt: new Date(Date.now() + Math.random() * 60 * 60 * 1000), 
+      confirmations: Math.floor(Math.random() * 20),
+      requiredConfirmations: Math.floor(Math.random() * 10) + 1
     }));
 
     setTimeout(() => {
