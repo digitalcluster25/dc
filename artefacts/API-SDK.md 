@@ -1,0 +1,655 @@
+// src/lib/railway/client.ts
+import { GraphQLClient } from 'graphql-request';
+import { CircuitBreaker } from 'opossum';
+import { logger } from '@/utils/logger';
+
+// Types
+export interface RailwayConfig {
+  apiKey: string;
+  apiUrl?: string;
+  timeout?: number;
+  retries?: number;
+}
+
+export interface Project {
+  id: string;
+  name: string;
+  description?: string;
+  teamId?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Service {
+  id: string;
+  name: string;
+  projectId: string;
+  templateId?: string;
+  source?: ServiceSource;
+  variables: Record<string, string>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ServiceSource {
+  type: 'github' | 'image' | 'template';
+  repo?: string;
+  branch?: string;
+  image?: string;
+  templateId?: string;
+}
+
+export interface Deployment {
+  id: string;
+  serviceId: string;
+  status: 'BUILDING' | 'DEPLOYING' | 'SUCCESS' | 'FAILED' | 'CRASHED' | 'REMOVED';
+  createdAt: string;
+  updatedAt: string;
+  meta?: DeploymentMeta;
+}
+
+export interface DeploymentMeta {
+  buildLogs: string[];
+  deployLogs: string[];
+  exitCode?: number;
+  buildDuration?: number;
+  deployDuration?: number;
+}
+
+export interface Domain {
+  id: string;
+  domain: string;
+  serviceId: string;
+  customDomain?: boolean;
+  createdAt: string;
+}
+
+export interface Variable {
+  name: string;
+  value: string;
+}
+
+// Custom errors
+export class RailwayApiError extends Error {
+  constructor(
+    message: string,
+    public statusCode: number,
+    public response?: any
+  ) {
+    super(message);
+    this.name = 'RailwayApiError';
+  }
+}
+
+export class RailwayApiRateLimitError extends RailwayApiError {
+  constructor(retryAfter?: number) {
+    super('Railway API rate limit exceeded', 429);
+    this.name = 'RailwayApiRateLimitError';
+  }
+}
+
+export class RailwayApiTimeoutError extends RailwayApiError {
+  constructor() {
+    super('Railway API request timeout', 408);
+    this.name = 'RailwayApiTimeoutError';
+  }
+}
+
+// GraphQL queries and mutations
+const QUERIES = {
+  GET_PROJECTS: `
+    query GetProjects {
+      projects {
+        edges {
+          node {
+            id
+            name
+            description
+            team {
+              id
+            }
+            createdAt
+            updatedAt
+          }
+        }
+      }
+    }
+  `,
+  
+  GET_PROJECT: `
+    query GetProject($id: String!) {
+      project(id: $id) {
+        id
+        name
+        description
+        team {
+          id
+        }
+        createdAt
+        updatedAt
+        services {
+          edges {
+            node {
+              id
+              name
+              createdAt
+            }
+          }
+        }
+      }
+    }
+  `,
+
+  GET_SERVICE: `
+    query GetService($id: String!) {
+      service(id: $id) {
+        id
+        name
+        project {
+          id
+        }
+        source {
+          type: __typename
+          ... on GitHubSource {
+            repo
+            branch
+          }
+          ... on ImageSource {
+            image
+          }
+        }
+        variables {
+          edges {
+            node {
+              name
+              value
+            }
+          }
+        }
+        deployments {
+          edges {
+            node {
+              id
+              status
+              createdAt
+              updatedAt
+              meta
+            }
+          }
+        }
+        domains {
+          edges {
+            node {
+              id
+              domain
+              customDomain
+              createdAt
+            }
+          }
+        }
+        createdAt
+        updatedAt
+      }
+    }
+  `,
+
+  GET_DEPLOYMENTS: `
+    query GetDeployments($serviceId: String!) {
+      service(id: $serviceId) {
+        deployments {
+          edges {
+            node {
+              id
+              status
+              createdAt
+              updatedAt
+              meta
+            }
+          }
+        }
+      }
+    }
+  `,
+
+  GET_DEPLOYMENT_LOGS: `
+    query GetDeploymentLogs($deploymentId: String!) {
+      deploymentLogs(deploymentId: $deploymentId) {
+        timestamp
+        message
+        severity
+      }
+    }
+  `,
+
+  GET_TEMPLATES: `
+    query GetTemplates {
+      templates {
+        edges {
+          node {
+            id
+            name
+            description
+            image
+            config
+            createdAt
+          }
+        }
+      }
+    }
+  `
+};
+
+const MUTATIONS = {
+  CREATE_PROJECT: `
+    mutation CreateProject($input: ProjectCreateInput!) {
+      projectCreate(input: $input) {
+        id
+        name
+        description
+        createdAt
+      }
+    }
+  `,
+
+  CREATE_SERVICE: `
+    mutation CreateService($input: ServiceCreateInput!) {
+      serviceCreate(input: $input) {
+        id
+        name
+        projectId
+        createdAt
+      }
+    }
+  `,
+
+  UPDATE_SERVICE: `
+    mutation UpdateService($id: String!, $input: ServiceUpdateInput!) {
+      serviceUpdate(id: $id, input: $input) {
+        id
+        name
+        updatedAt
+      }
+    }
+  `,
+
+  DELETE_SERVICE: `
+    mutation DeleteService($id: String!) {
+      serviceDelete(id: $id)
+    }
+  `,
+
+  DEPLOY_SERVICE: `
+    mutation DeployService($serviceId: String!) {
+      serviceDeploy(serviceId: $serviceId) {
+        id
+        status
+        createdAt
+      }
+    }
+  `,
+
+  SET_VARIABLES: `
+    mutation SetVariables($serviceId: String!, $variables: [VariableInput!]!) {
+      variableCollectionUpsert(serviceId: $serviceId, variables: $variables) {
+        name
+        value
+      }
+    }
+  `,
+
+  CREATE_DOMAIN: `
+    mutation CreateDomain($serviceId: String!, $domain: String!) {
+      domainCreate(serviceId: $serviceId, domain: $domain) {
+        id
+        domain
+        createdAt
+      }
+    }
+  `,
+
+  DELETE_DOMAIN: `
+    mutation DeleteDomain($id: String!) {
+      domainDelete(id: $id)
+    }
+  `,
+
+  GENERATE_DOMAIN: `
+    mutation GenerateDomain($serviceId: String!) {
+      domainGenerate(serviceId: $serviceId) {
+        id
+        domain
+        createdAt
+      }
+    }
+  `
+};
+
+/**
+ * Railway API Client with TypeScript support
+ * Provides complete integration with Railway GraphQL API
+ */
+export class RailwayApiClient {
+  private client: GraphQLClient;
+  private circuitBreaker: CircuitBreaker;
+  private config: Required<RailwayConfig>;
+
+  constructor(config: RailwayConfig) {
+    this.config = {
+      apiUrl: 'https://backboard.railway.app/graphql',
+      timeout: 30000,
+      retries: 3,
+      ...config
+    };
+
+    this.client = new GraphQLClient(this.config.apiUrl, {
+      headers: {
+        Authorization: `Bearer ${this.config.apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      timeout: this.config.timeout,
+    });
+
+    // Circuit breaker configuration
+    this.circuitBreaker = new CircuitBreaker(this.makeRequest.bind(this), {
+      timeout: this.config.timeout,
+      errorThresholdPercentage: 50,
+      resetTimeout: 30000,
+      rollingCountTimeout: 60000,
+      rollingCountBuckets: 10,
+    });
+
+    this.setupCircuitBreakerEvents();
+  }
+
+  private setupCircuitBreakerEvents() {
+    this.circuitBreaker.on('open', () => {
+      logger.warn('Railway API circuit breaker opened');
+    });
+
+    this.circuitBreaker.on('halfOpen', () => {
+      logger.info('Railway API circuit breaker half-open');
+    });
+
+    this.circuitBreaker.on('close', () => {
+      logger.info('Railway API circuit breaker closed');
+    });
+  }
+
+  private async makeRequest<T>(query: string, variables?: any): Promise<T> {
+    try {
+      const response = await this.client.request<T>(query, variables);
+      return response;
+    } catch (error: any) {
+      this.handleApiError(error);
+      throw error;
+    }
+  }
+
+  private handleApiError(error: any) {
+    const status = error.response?.status || error.status;
+    const message = error.response?.error || error.message || 'Unknown Railway API error';
+
+    logger.error('Railway API Error', {
+      status,
+      message,
+      query: error.request?.query,
+      variables: error.request?.variables,
+    });
+
+    if (status === 429) {
+      throw new RailwayApiRateLimitError();
+    }
+
+    if (status === 408 || error.code === 'TIMEOUT') {
+      throw new RailwayApiTimeoutError();
+    }
+
+    throw new RailwayApiError(message, status || 500, error.response);
+  }
+
+  // Project Management
+  async getProjects(): Promise<Project[]> {
+    const response = await this.circuitBreaker.fire(QUERIES.GET_PROJECTS);
+    return response.projects.edges.map((edge: any) => ({
+      id: edge.node.id,
+      name: edge.node.name,
+      description: edge.node.description,
+      teamId: edge.node.team?.id,
+      createdAt: edge.node.createdAt,
+      updatedAt: edge.node.updatedAt,
+    }));
+  }
+
+  async getProject(id: string): Promise<Project | null> {
+    try {
+      const response = await this.circuitBreaker.fire(QUERIES.GET_PROJECT, { id });
+      const project = response.project;
+      
+      if (!project) return null;
+
+      return {
+        id: project.id,
+        name: project.name,
+        description: project.description,
+        teamId: project.team?.id,
+        createdAt: project.createdAt,
+        updatedAt: project.updatedAt,
+      };
+    } catch (error: any) {
+      if (error.response?.errors?.[0]?.message?.includes('not found')) {
+        return null;
+      }
+      throw error;
+    }
+  }
+
+  async createProject(input: {
+    name: string;
+    description?: string;
+    teamId?: string;
+  }): Promise<Project> {
+    const response = await this.circuitBreaker.fire(MUTATIONS.CREATE_PROJECT, { input });
+    return response.projectCreate;
+  }
+
+  // Service Management
+  async createService(input: {
+    projectId: string;
+    name: string;
+    source?: ServiceSource;
+    variables?: Record<string, string>;
+  }): Promise<Service> {
+    const serviceInput = {
+      projectId: input.projectId,
+      name: input.name,
+      source: input.source,
+    };
+
+    const response = await this.circuitBreaker.fire(MUTATIONS.CREATE_SERVICE, { 
+      input: serviceInput 
+    });
+
+    const service = response.serviceCreate;
+
+    // Set variables if provided
+    if (input.variables && Object.keys(input.variables).length > 0) {
+      await this.setServiceVariables(service.id, input.variables);
+    }
+
+    return {
+      id: service.id,
+      name: service.name,
+      projectId: service.projectId,
+      variables: input.variables || {},
+      createdAt: service.createdAt,
+      updatedAt: service.createdAt,
+    };
+  }
+
+  async getService(id: string): Promise<Service | null> {
+    try {
+      const response = await this.circuitBreaker.fire(QUERIES.GET_SERVICE, { id });
+      const service = response.service;
+
+      if (!service) return null;
+
+      // Extract variables
+      const variables: Record<string, string> = {};
+      service.variables.edges.forEach((edge: any) => {
+        variables[edge.node.name] = edge.node.value;
+      });
+
+      return {
+        id: service.id,
+        name: service.name,
+        projectId: service.project.id,
+        source: service.source,
+        variables,
+        createdAt: service.createdAt,
+        updatedAt: service.updatedAt,
+      };
+    } catch (error: any) {
+      if (error.response?.errors?.[0]?.message?.includes('not found')) {
+        return null;
+      }
+      throw error;
+    }
+  }
+
+  async updateService(id: string, input: {
+    name?: string;
+    source?: ServiceSource;
+  }): Promise<Service> {
+    const response = await this.circuitBreaker.fire(MUTATIONS.UPDATE_SERVICE, { 
+      id, 
+      input 
+    });
+    return response.serviceUpdate;
+  }
+
+  async deleteService(id: string): Promise<void> {
+    await this.circuitBreaker.fire(MUTATIONS.DELETE_SERVICE, { id });
+  }
+
+  // Deployment Management
+  async deployService(serviceId: string): Promise<Deployment> {
+    const response = await this.circuitBreaker.fire(MUTATIONS.DEPLOY_SERVICE, { 
+      serviceId 
+    });
+    return response.serviceDeploy;
+  }
+
+  async getDeployments(serviceId: string): Promise<Deployment[]> {
+    const response = await this.circuitBreaker.fire(QUERIES.GET_DEPLOYMENTS, { 
+      serviceId 
+    });
+    
+    return response.service.deployments.edges.map((edge: any) => edge.node);
+  }
+
+  async getDeploymentLogs(deploymentId: string): Promise<string[]> {
+    const response = await this.circuitBreaker.fire(QUERIES.GET_DEPLOYMENT_LOGS, { 
+      deploymentId 
+    });
+    
+    return response.deploymentLogs.map((log: any) => 
+      `[${log.timestamp}] ${log.severity}: ${log.message}`
+    );
+  }
+
+  // Environment Variables
+  async setServiceVariables(
+    serviceId: string, 
+    variables: Record<string, string>
+  ): Promise<Variable[]> {
+    const variableInputs = Object.entries(variables).map(([name, value]) => ({
+      name,
+      value,
+    }));
+
+    const response = await this.circuitBreaker.fire(MUTATIONS.SET_VARIABLES, {
+      serviceId,
+      variables: variableInputs,
+    });
+
+    return response.variableCollectionUpsert;
+  }
+
+  async getServiceVariables(serviceId: string): Promise<Record<string, string>> {
+    const service = await this.getService(serviceId);
+    return service?.variables || {};
+  }
+
+  // Domain Management
+  async createDomain(serviceId: string, domain: string): Promise<Domain> {
+    const response = await this.circuitBreaker.fire(MUTATIONS.CREATE_DOMAIN, {
+      serviceId,
+      domain,
+    });
+    return response.domainCreate;
+  }
+
+  async generateDomain(serviceId: string): Promise<Domain> {
+    const response = await this.circuitBreaker.fire(MUTATIONS.GENERATE_DOMAIN, {
+      serviceId,
+    });
+    return response.domainGenerate;
+  }
+
+  async deleteDomain(domainId: string): Promise<void> {
+    await this.circuitBreaker.fire(MUTATIONS.DELETE_DOMAIN, { 
+      id: domainId 
+    });
+  }
+
+  // Template Management
+  async getTemplates(): Promise<any[]> {
+    const response = await this.circuitBreaker.fire(QUERIES.GET_TEMPLATES);
+    return response.templates.edges.map((edge: any) => edge.node);
+  }
+
+  // Utility Methods
+  async healthCheck(): Promise<boolean> {
+    try {
+      await this.getProjects();
+      return true;
+    } catch (error) {
+      logger.error('Railway API health check failed', error);
+      return false;
+    }
+  }
+
+  /**
+   * Get API usage statistics for monitoring
+   */
+  getCircuitBreakerStats() {
+    return {
+      state: this.circuitBreaker.opened ? 'open' : 
+             this.circuitBreaker.halfOpen ? 'half-open' : 'closed',
+      failures: this.circuitBreaker.stats.failures,
+      successes: this.circuitBreaker.stats.successes,
+      rejects: this.circuitBreaker.stats.rejects,
+      fires: this.circuitBreaker.stats.fires,
+    };
+  }
+}
+
+// Factory function for creating Railway client
+export function createRailwayClient(config?: Partial<RailwayConfig>): RailwayApiClient {
+  const railwayConfig: RailwayConfig = {
+    apiKey: process.env.RAILWAY_API_KEY!,
+    apiUrl: process.env.RAILWAY_API_URL,
+    timeout: parseInt(process.env.RAILWAY_API_TIMEOUT || '30000'),
+    retries: parseInt(process.env.RAILWAY_API_RETRIES || '3'),
+    ...config,
+  };
+
+  if (!railwayConfig.apiKey) {
+    throw new Error('Railway API key is required');
+  }
+
+  return new RailwayApiClient(railwayConfig);
+}
+
+// Singleton instance for app-wide usage
+export const railwayClient = createRailwayClient();
