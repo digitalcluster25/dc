@@ -11,16 +11,12 @@ const REFRESH_SECRET = new TextEncoder().encode(
   process.env.REFRESH_SECRET || 'railway-saas-refresh-secret-key-change-in-production'
 );
 
-export interface TokenPayload {
-  userId: string;
-  email: string;
-  role: UserRole;
-}
+
 
 /**
  * Создать Access Token (15 минут)
  */
-export async function createAccessToken(payload: TokenPayload): Promise<string> {
+export async function createAccessToken(payload: Omit<JWTPayload, 'iat' | 'exp'>): Promise<string> {
   const token = await new SignJWT(payload)
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
@@ -34,7 +30,7 @@ export async function createAccessToken(payload: TokenPayload): Promise<string> 
 /**
  * Создать Refresh Token (7 дней)
  */
-export async function createRefreshToken(payload: TokenPayload): Promise<string> {
+export async function createRefreshToken(payload: Omit<JWTPayload, 'iat' | 'exp'>): Promise<string> {
   const token = await new SignJWT(payload)
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
