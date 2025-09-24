@@ -7,10 +7,9 @@ import { CryptoPayment, CryptoCurrency } from '../types/crypto-billing.types';
 import { 
   formatWalletAddress, 
   formatCryptoAmount, 
-  copyToClipboard,
-  getCryptoIcon,
-  getCryptoColor 
+  copyToClipboard
 } from '../utils/formatters';
+import { getCryptoIcon, getCryptoColor } from '../utils/constants';
 
 interface CryptoWalletProps {
   payment: CryptoPayment;
