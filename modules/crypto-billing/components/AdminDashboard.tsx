@@ -16,9 +16,9 @@ import {
   formatFiatAmount, 
   formatPaymentStatus, 
   timeAgo,
-  getCryptoIcon,
   abbreviateNumber
 } from '../utils/formatters';
+import { getCryptoIcon } from '../utils/constants';
 import { useCryptoRates } from '../hooks/useCryptoRates';
 
 interface AdminDashboardProps {
