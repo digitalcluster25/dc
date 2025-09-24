@@ -7,9 +7,10 @@ import {
   CryptoCurrency, 
   CryptoPayment, 
   ServiceType, 
-  CryptoRate 
+  CryptoRate,
+  SUPPORTED_CURRENCIES,
+  SERVICE_CATALOG
 } from '../types/crypto-billing.types';
-import { SUPPORTED_CURRENCIES, SERVICE_CATALOG } from '../utils/constants';
 import { 
   formatCryptoAmount, 
   formatFiatAmount, 
