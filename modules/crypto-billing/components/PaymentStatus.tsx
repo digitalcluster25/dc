@@ -5,7 +5,8 @@
 import { useState, useEffect } from 'react';
 import { 
   CryptoPayment, 
-  PaymentStatus as PaymentStatusType 
+  PaymentStatus as PaymentStatusType,
+  SERVICE_CATALOG
 } from '../types/crypto-billing.types';
 import { 
   formatPaymentStatus, 
@@ -15,7 +16,6 @@ import {
   getExplorerUrl,
   timeAgo
 } from '../utils/formatters';
-import { SERVICE_CATALOG } from '../utils/constants';
 
 interface PaymentStatusProps {
   paymentId: string;
