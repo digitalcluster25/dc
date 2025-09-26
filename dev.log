@@ -1,0 +1,63 @@
+
+> digital-cluster-25@1.0.0 dev
+> next dev
+
+  ▲ Next.js 14.2.5
+  - Local:        http://localhost:3000
+
+ ✓ Starting...
+ ✓ Ready in 2.5s
+ ○ Compiling /_error ...
+ ✓ Compiled /_error in 2.6s (261 modules)
+ GET /_next/static/webpack/f6775021c65f55ed.webpack.hot-update.json 404 in 2744ms
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ✓ Compiled / in 340ms (265 modules)
+ GET /_next/static/webpack/f6775021c65f55ed.webpack.hot-update.json 404 in 208ms
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ GET / 200 in 313ms
+ GET / 200 in 7ms
+ ✓ Compiled in 190ms (265 modules)
+ ⨯ ./pages/index.tsx
+Error: 
+  [31mx[0m Expected ';', '}' or <eof>
+   ,-[[36;1;4m/Users/macbookpro/Coding/dc/pages/index.tsx[0m:1:1]
+ [2m1[0m | import React from 'react';
+ [2m2[0m | iexport default function Home() {
+   : [31;1m^^^|^^^[0m[33;1m ^^^^^^^[0m
+   :    [31;1m`-- [31;1mThis is the expression part of an expression statement[0m[0m
+ [2m3[0m |   return (
+ [2m4[0m |     <>
+ [2m5[0m |       <Head>
+   `----
+
+Caused by:
+    Syntax Error
+ ⨯ ./pages/index.tsx
+Error: 
+  [31mx[0m Expression expected
+   ,-[[36;1;4m/Users/macbookpro/Coding/dc/pages/index.tsx[0m:3:1]
+ [2m3[0m | 
+ [2m4[0m | export default function Home() {
+ [2m5[0m |   return (
+ [2m6[0m |     <>
+   : [31;1m     ^[0m
+ [2m7[0m |       <Head>
+ [2m8[0m |         <title>Digital Cluster 25 - Building the Future Web</title>
+ [2m9[0m |         <meta name="description" content="Digital Cluster 25 starts here. Welcome to our journey of building innovative web solutions and digital experiences. Join us as we create the future of web development." />
+   `----
+
+  [31mx[0m Expected ',', got 'className'
+    ,-[[36;1;4m/Users/macbookpro/Coding/dc/pages/index.tsx[0m:12:1]
+ [2m12[0m |       </Head>
+ [2m13[0m |       
+ [2m14[0m |       <div
+ [2m15[0m |       className="min-h-screen flex items-center justify-center bg-cover bg-center bg-no-repeat relative"
+    : [31;1m      ^^^^^^^^^[0m
+ [2m16[0m |       style={{
+ [2m17[0m |         backgroundImage: "url('/dc25_bg.jpg')"
+ [2m18[0m |       }}
+    `----
+
+Caused by:
+    Syntax Error
+ ✓ Compiled in 216ms (265 modules)
